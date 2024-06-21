@@ -7,7 +7,7 @@ import numpy as np
 input_folder = ''
 output_folder = './convert_store'
 
-start_date = '2011-01-01'
+start_date = '2019-01-01'
 end_date = '2020-12-31'
 
 # product_name = ['MCD12Q2', 'MOD13A3', 'MYD13A3', 'MOD14A2', 'MYD14A2', 'MOD28C3', 'MYD28C3']
@@ -58,54 +58,59 @@ for product in product_file_list.keys():
     os.makedirs(product_output_folder)
 
   for file in product_file_list[product]:
+
+    file = file.replace('\\', '/')
+
     print(f'Reading file {file} __________________ ', end='')
 
     input_base_file = '.'.join(file.split('/')[-1].split('.')[:-1])
-    #print(input_base_file)
+
     # Open the HDF4 file
-    hdf4 = gdal.Open(file, gdal.GA_ReadOnly) #pip3 install rasterio --force-reinstall --no-binary rasterio 
-    print(hdf4)
+    hdf4 = gdal.Open(file, gdal.GA_ReadOnly)
+
     # Get subdatasets (MODIS data is stored in subdatasets)
     subdatasets = hdf4.GetSubDatasets()
 
-    # print(f'Found {len(subdatasets)} bands in HDF file')
+    print(f'Found {len(subdatasets)} bands in HDF file')
 
-    # for band_i in product_band[product]:
+    for band_i in product_band[product]:
 
-    #   band_output_folder = os.path.join(product_output_folder, f'band_{band_i:02}')
+      band_output_folder = os.path.join(product_output_folder, f'band_{band_i:02}')
 
-    #   if not os.path.exists(band_output_folder):
-    #     os.makedirs(band_output_folder)
+      if not os.path.exists(band_output_folder):
+        os.makedirs(band_output_folder)
 
-    #   output_base_file = f'{input_base_file}_b{band_i:02}.tif'
+      output_base_file = f'{input_base_file}_b{band_i:02}.tif'
 
-    #   output_file = os.path.join(band_output_folder, output_base_file)
+      output_file = os.path.join(band_output_folder, output_base_file)
 
-    #   # Replace subdataset_index with the index of the subdataset you need
-    #   modis_dataset = gdal.Open(subdatasets[band_i-1][0], gdal.GA_ReadOnly)
+      # Replace subdataset_index with the index of the subdataset you need
+      modis_dataset = gdal.Open(subdatasets[band_i-1][0], gdal.GA_ReadOnly)
 
-    #   # Read data from the selected subdataset
-    #   data = modis_dataset.ReadAsArray()
+      # Read data from the selected subdataset
+      data = modis_dataset.ReadAsArray()
+      if len(data.shape) > 2:
+        data = data[0]
 
-    #   # Get geotransform and projection from the subdataset
-    #   geotransform = modis_dataset.GetGeoTransform()
-    #   projection = modis_dataset.GetProjection()
+      # Get geotransform and projection from the subdataset
+      geotransform = modis_dataset.GetGeoTransform()
+      projection = modis_dataset.GetProjection()
 
-    #   # Create a new GeoTIFF file
-    #   driver = gdal.GetDriverByName('GTiff')
-    #   out_dataset = driver.Create(output_file, modis_dataset.RasterXSize, modis_dataset.RasterYSize, 1, gdal.GDT_Float32)
+      # Create a new GeoTIFF file
+      driver = gdal.GetDriverByName('GTiff')
+      out_dataset = driver.Create(output_file, modis_dataset.RasterXSize, modis_dataset.RasterYSize, 1, gdal.GDT_Float32)
 
-    #   # Set geotransform and projection
-    #   out_dataset.SetGeoTransform(geotransform)
-    #   out_dataset.SetProjection(projection)
+      # Set geotransform and projection
+      out_dataset.SetGeoTransform(geotransform)
+      out_dataset.SetProjection(projection)
 
-    #   # Write the data to the new file
-    #   out_dataset.GetRasterBand(1).WriteArray(data)
+      # Write the data to the new file
+      out_dataset.GetRasterBand(1).WriteArray(data)
 
-    #   # Close the datasets
-    #   out_dataset = None
-    #   modis_dataset = None
+      # Close the datasets
+      out_dataset = None
+      modis_dataset = None
 
-    #   print(f'Band {band_i}/{len(product_band[product])} written at {output_file}')
+      print(f'Band {band_i}/{len(product_band[product])} written at {output_file}')
 
-    # hdf4 = None
+    hdf4 = None
