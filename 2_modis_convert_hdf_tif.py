@@ -7,12 +7,12 @@ import numpy as np
 input_folder = './data_store'
 output_folder = './convert_store'
 
-start_date = '2019-01-01'
+start_date = '2020-01-01'
 end_date = '2020-12-31'
 
 # product_name = ['MCD12Q2', 'MOD13A3', 'MYD13A3', 'MOD14A2', 'MYD14A2', 'MOD28C3', 'MYD28C3']
 # product_name = ['MOD13A3', 'MYD13A3', 'MOD14A2', 'MOD28C3', 'MYD28C3']
-product_name = ['MCD12Q2']
+product_name = ['MOD13A3']
 
 product_band = {'MCD12Q2': [1, 2, 3],
                 'MOD13A3': [1, 2, 3],

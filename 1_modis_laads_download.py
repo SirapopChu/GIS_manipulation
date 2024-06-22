@@ -5,8 +5,8 @@ import shutil
 import pandas as pd
 from datetime import datetime, timedelta
 from config import TOKEN_KEY
-from Google import Create_Service
-from googleapiclient.http import MediaFileUpload
+# from Google import Create_Service
+# from googleapiclient.http import MediaFileUpload
 
 # _______________ SYSTEM CONFIG ___________________
 
@@ -15,14 +15,14 @@ API_NAME = 'drive'
 API_VERSION = 'v3'
 SCPOES = ['https://www.googleapis.com/auth/drive']
 
-service = Create_Service(CLIENT_SECRET_FILE, API_NAME, API_VERSION, SCPOES)
+# service = Create_Service(CLIENT_SECRET_FILE, API_NAME, API_VERSION, SCPOES)
 
 thailand_tiles = ['h27v07', 'h27v08','h28v07', 'h28v08']
 
-start_date = '2019-01-01'
+start_date = '2020-01-01'
 end_date = '2020-12-31'
 
-product_name = ['MCD12Q2']
+product_name = ['MOD13A3']
 # ['MOD13A3', 'MYD13A3', 'MOD14A2', 'MYD14A2', 'MOD16A3', 'MYD16A3']
 # see product name at https://modis.gsfc.nasa.gov/data/dataprod/
 
@@ -63,7 +63,6 @@ def filter_by_hv_patterns(data, hv_patterns):
       filtered_data.extend(data)
 
     return filtered_data
-
 
 
 def download_files(data, download_folder):
@@ -245,7 +244,7 @@ print(year_period)
 for product in product_name:
 
   download_list = []
-  save_to_subfolder = f'/{product}_{start_date}_{end_date}'
+  save_to_subfolder = f'{product}_{start_date}_{end_date}'
 
   for year in year_period.keys():
 
