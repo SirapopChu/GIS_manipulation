@@ -4,7 +4,7 @@ import glob
 import numpy as np
 #import h5py
 
-input_folder = ''
+input_folder = './data_store'
 output_folder = './convert_store'
 
 start_date = '2019-01-01'
@@ -44,7 +44,7 @@ def list_files_by_pattern(folder, pattern):
 product_file_list = {}
 for product in product_name:
   product_pattern = f'*{product}*.hdf'
-  input_folder = f'./{product}_{start_date}_{end_date}'
+  input_folder = f'{input_folder}/{product}_{start_date}_{end_date}'
   product_file_list[product] = list_files_by_pattern(input_folder, product_pattern)
 
 for product, file_list in product_file_list.items():
