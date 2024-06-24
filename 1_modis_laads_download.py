@@ -1,21 +1,10 @@
 import requests
 import json
 import os
-import shutil
 import pandas as pd
 from datetime import datetime, timedelta
 from config import TOKEN_KEY
-# from Google import Create_Service
-# from googleapiclient.http import MediaFileUpload
 
-# _______________ SYSTEM CONFIG ___________________
-
-CLIENT_SECRET_FILE = 'client_secret.json'
-API_NAME = 'drive'
-API_VERSION = 'v3'
-SCPOES = ['https://www.googleapis.com/auth/drive']
-
-# service = Create_Service(CLIENT_SECRET_FILE, API_NAME, API_VERSION, SCPOES)
 
 thailand_tiles = ['h27v07', 'h27v08','h28v07', 'h28v08']
 
@@ -171,70 +160,6 @@ def extract_year_and_period(start_date, end_date):
         current_year += 1
 
     return output
-
-def upload_to_drive(file_name_list, folder):
-    folder_id = '1anWz6PNvMpVK2lwTQ2ucbXMowo-Tefl0' #folder kepler
-    folder_names = [folder]
-    mime_types1 = [] # type of file that can search on 'https://kb.hostatom.com/content/20612/'
-    for type in folder_names:
-        mime_types1.append('application/vnd.google-apps.folder')
-
-    for folder_name, mime_type in zip(folder_names, mime_types1):
-        file_metadata = {
-            'name': folder_name[2:],
-            'mimeType': 'application/vnd.google-apps.folder',
-            'parents': [folder_id]
-        }
-
-        service.files().create(
-            body=file_metadata,
-        ).execute()
-
-    query = f"parents = '{folder_id}'"
-    response = service.files().list(q=query).execute()
-    files = response.get('files')
-    
-    file_names = []
-    mime_types = [] # type of file that have search on 'Commonly Used mime types'
-
-    for item in file_name_list:
-        url = item['downloadsLink']
-        file_name = url.split('/')[-1]  # Extract the file name from the URL
-        file_names.append(file_name)
-
-    for type in file_names:
-        if type[-3:] == 'hdf':
-            mime_types.append('application/x-hdf')
-
-    # print(folder)
-    # print(file_names)
-    # print(mime_types)
-    # print(f'{folder}/{file_name}')
-    for file_name, mime_type in zip(file_names, mime_types):
-        for x in range(len(files)):
-            if files[x].get('name').split('_')[0] == file_name.split('.')[0]:
-                id = files[x].get('id')
-                file_metadata = {
-                    'name': file_name,
-                    'parents': [id] 
-                }
-            else:
-                pass
-
-        media = MediaFileUpload(f'{folder}/{file_name}', mimetype=mime_type)
-
-        service.files().create(
-            body=file_metadata,
-            media_body=media,
-            fields='id'
-        ).execute()
-
-def delete_folder(folder):
-    try:
-        shutil.rmtree(folder)
-        print('Folder and its content removed')
-    except:
-        print('Folder not deleted')
 
 year_period = extract_year_and_period(start_date, end_date)
 print(year_period)
