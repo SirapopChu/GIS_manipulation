@@ -188,5 +188,3 @@ for product in product_name:
               download_list.extend(query_by_year_doy_hv)
 
   download_files(download_list[:], save_to_subfolder)
-  #upload_to_drive(download_list[:], save_to_folder)
-  #delete_folder(save_to_folder)
