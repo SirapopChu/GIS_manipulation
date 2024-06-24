@@ -20,7 +20,7 @@ token = TOKEN_KEY
 save_to_folder = './data_store'
 
 if not os.path.exists(save_to_folder):
-        os.makedirs(save_to_folder) # Create the folder if it doesn't exist
+    os.makedirs(save_to_folder) # Create the folder if it doesn't exist
 
 
 # _______________ SYSTEM CONFIG ___________________
@@ -82,7 +82,7 @@ def download_files(data, download_folder):
               response.raise_for_status()  # Check for HTTP request errors
 
               with open(file_path, 'wb') as file:
-                  for chunk in response.iter_content(chunk_size=8192):
+                  for chunk in response.iter_content(chunk_size=8192): #chunk size -> 4000
                       file.write(chunk)
               print(f"Downloaded {file_name} to {download_folder}")
 
