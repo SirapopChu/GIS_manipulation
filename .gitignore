@@ -163,3 +163,10 @@ cython_debug/
 
 data_store/
 convert_store/
+.cache.sqlite
+meteostat_api.ipynb
+dataset/DDPM_arcrest_admin_amphoe_csv.csv
+dataset/DDPM_arcrest_admin_province_csv.csv
+dataset/DDPM_arcrest_admin_tambon_csv.csv
+dataset/ddpm_tambon_hazard_dataset.csv
+dataset/tambon lat lon location.csv
