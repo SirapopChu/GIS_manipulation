@@ -8,9 +8,9 @@ requirements.txt
   Layers of a deep learning model called RNet are used for predicting impact levels from range 1 to 4 using an open-source weather API from open_meteo, in which 1 is the least severe and 4 is the most severe. The disasters that the model can predict include droughts, floods, and storms in various districts. Using Thailand's latitude and longitude coordinate data from the open-source, Disaster Dataset from the Department of Disaster Prevention and Mitigation (DDPM). (a reference to open_meteo.ipynb and RNet.ipynb). After RNet, INet uses the latitude and longitude risk level information from the original dataset to make a template risk score map using the inverse distance weight (IDW) technique for the risk score to cover the entirety of Thailand. Then match the point of interest (POI) to the location on the template to use the risk score on the exact location. Then merge POI lat-lon with their Financial Data to predict the business's 12 financial indexes in the latest year. (a reference to IDW_DDPM_loc.ipynb, lat-lon_firmscrap.ipynb)
 
 ## meaning
-archive - keep an old testing 
-do_data-extraction - developing extract API Disaster Occurrance (DO) from DDPM 
-forecast_net - development directory , Disaster Occurance forecast 
-main - main of execute process flow line 
-keplerfunction - every class in main function 
-output - directory for collect output from main 
+archive - keep an old testing  < br / > 
+do_data-extraction - developing extract API Disaster Occurrance (DO) from DDPM  < br / > 
+forecast_net - development directory , Disaster Occurance forecast < br / > 
+main - main of execute process flow line < br / > 
+keplerfunction - every class in main function < br / > 
+output - directory for collect output from main < br / > 
