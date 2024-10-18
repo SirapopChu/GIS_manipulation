@@ -9,8 +9,13 @@ requirements.txt
 
 ## meaning
 1.archive : keep an old testing  
+
 2.do_data-extraction : developing extract API Disaster Occurrance (DO) from DDPM 
+
 3.forecast_net : development directory , Disaster Occurance forecast 
+
 4.main : main of execute process flow line 
+
 5.keplerfunction : every class in main function 
+
 6.output : directory for collect output from main 
