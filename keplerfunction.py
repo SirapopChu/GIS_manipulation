@@ -7,8 +7,14 @@ from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import root_mean_squared_error, r2_score
 
-import warnings 
-warnings.filterwarnings("ignore")
+def read_data(input_folder, dir_name, firm_name):
+
+    input_path = os.path.join(input_folder, dir_name, firm_name)
+    file_name = os.listdir(input_path)[0]
+    
+    file_path = os.path.join(input_path, file_name) 
+
+    return pd.read_csv(rf'{file_path}')
 
 def get_disaster_in_year(dis_occ, type, year) -> pd.DataFrame:
     return dis_occ[(dis_occ['year'] == year) & (dis_occ['type'] == type)]
@@ -102,70 +108,70 @@ def calculate_firm_finance_features(firm_fin: pd.DataFrame, fin_col_range: tuple
     firm_fin_filter_feature: pd.DataFrame = firm_fin_filter_year.iloc[:, fin_col_range[0]:fin_col_range[1]+1]
     
     return firm_fin_filter_feature / fin_scale_factor
-    
 class modeling:
     """
-    คลาสสำหรับการสร้างและประเมินโมเดลต่างๆ
+    Class for creating and evaluating various models
     """
-    def __init__(self, firm_finance_feature: pd.DataFrame, disaster_firm_index: pd.DataFrame):
+    def __init__(self, firm_name: str, firm_finance_feature: pd.DataFrame, disaster_firm_index: pd.DataFrame):
+        self.firm_name = firm_name
         self.firm_finance_feature = firm_finance_feature
         self.disaster_firm_index = disaster_firm_index
         self.finance_features = firm_finance_feature.columns
 
     def generate_X_Y(self, prices: np.ndarray, disaster_occurrences: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         """
-        สร้างชุดข้อมูล X และ Y สำหรับการฝึกโมเดล
+        Generate the dataset X and Y for model training
         """
-        features = []  # เพื่อเก็บ tuples ของฟีเจอร์
-        targets = []   # เพื่อเก็บความแตกต่างของราคา
+        features = []  # To store tuples of features
+        targets = []   # To store the difference in prices
 
-        # ลูปผ่านแถวของข้อมูล โดยเริ่มจาก index 1
+        # Loop through the rows of data, starting from index 1
         for i in range(1, len(prices)):
-            features.append(disaster_occurrences[i])  # X เป็นฟีเจอร์ที่ index ปัจจุบัน
-            targets.append(prices[i] - prices[i - 1])  # Y เป็นความแตกต่างของราคา
+            features.append(disaster_occurrences[i])  # X is the feature at the current index
+            targets.append(prices[i] - prices[i - 1])  # Y is the difference in prices
 
         return np.asarray(features), np.asarray(targets)
 
     def make_y_logistic(self, y_data: np.ndarray) -> np.ndarray:
         """
-        แปลง Y data เป็นค่าลอจิสติก (1 ถ้า y_i > 0, มิฉะนั้น 0)
+        Transform Y data to logistic values (1 if y_i > 0, otherwise 0)
         """
         return np.asarray([1 if y_i > 0 else 0 for y_i in y_data])
 
-    def find_DQC(self, output_path: str = 'output/homepro_disaster_quantity_coefficients.csv') -> pd.DataFrame:
+    def find_DQC(self) -> pd.DataFrame:
         """
-        ค้นหาค่าสัมประสิทธิ์ปริมาณภัยพิบัติ (Disaster Quantity Coefficients - DQC) โดยใช้ Linear Regression
+        Find the Disaster Quantity Coefficients (DQC) using Linear Regression
         """
-        output_folder = output_path.split('/')[0]
+        output_folder = f'./output/{self.firm_name}'
         DQC_result = []
 
         for feature_idx in range(self.firm_finance_feature.shape[1]):
             feature_result = []
             feature_name = self.finance_features[feature_idx]
 
-            # สร้าง X และ Y
+            # Generate X and Y
             X, y = self.generate_X_Y(
                 prices=self.firm_finance_feature.iloc[:, feature_idx].to_numpy(),
                 disaster_occurrences=self.disaster_firm_index.to_numpy()
             )
 
-            # ตรวจสอบว่ามีข้อมูลเพียงพอสำหรับการฝึกโมเดลหรือไม่
+            # Check if there is enough data to train the model
             if len(X) == 0:
                 print(f"Insufficient data for feature {feature_name}. Skipping...")
                 continue
 
-            # สร้างและฝึกโมเดล Linear Regression
+            # Create and train the Linear Regression model
             model = LinearRegression()
             model.fit(X, y)
             y_pred = model.predict(X)
 
-            # คำนวณค่าประเมินโมเดล
+            # Calculate model evaluation metrics
             rmse = np.sqrt(root_mean_squared_error(y, y_pred))
             r2 = r2_score(y, y_pred)
             coefs = model.coef_
             bias = model.intercept_
 
-            # เก็บผลลัพธ์
+            # Store the results
             feature_result.append(feature_name)
             feature_result.append(r2)
             feature_result.append(rmse)
@@ -174,52 +180,54 @@ class modeling:
 
             DQC_result.append(feature_result)
 
-        # สร้าง DataFrame จากผลลัพธ์
+        # Create a DataFrame from the results
         DQC_columns = ['finance_feature', 'r2', 'rmse'] + [f'coef_{col}' for col in self.disaster_firm_index.columns] + ['bias']
         DQC_df = pd.DataFrame(DQC_result, columns=DQC_columns)
 
-        # บันทึกผลลัพธ์ลงไฟล์ CSV
-
+        # Save the results to a CSV file
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
 
+        output_path = os.path.join(output_folder, f'{self.firm_name}_disaster_quantity_coefficients.csv')
+
         DQC_df.to_csv(output_path, index=False)
         print(f"DQC results saved to {output_path}")
+
         return DQC_df
 
-    def find_DAP(self, output_path: str = 'output/homepro_disaster_affect_probabilities.csv') -> pd.DataFrame:
+    def find_DAP(self) -> pd.DataFrame:
         """
-        ค้นหาความน่าจะเป็นของการได้รับผลกระทบจากภัยพิบัติ (Disaster Affection Probability - DAP) โดยใช้ Random Forest Regressor
+        Find the Disaster Affection Probability (DAP) using Random Forest Regressor
         """
-        output_folder = output_path.split('/')[0]
+        output_folder = f'./output/{self.firm_name}'
         DAP_result = []
 
         for feature_idx in range(self.firm_finance_feature.shape[1]):
             feature_result = []
             feature_name = self.finance_features[feature_idx]
 
-            # สร้าง X และ Y
+            # Generate X and Y
             X, y = self.generate_X_Y(
                 prices=self.firm_finance_feature.iloc[:, feature_idx].to_numpy(),
                 disaster_occurrences=self.disaster_firm_index.to_numpy()
             )
 
-            # ตรวจสอบว่ามีข้อมูลเพียงพอสำหรับการฝึกโมเดลหรือไม่
+            # Check if there is enough data to train the model
             if len(X) == 0:
                 print(f"Insufficient data for feature {feature_name}. Skipping...")
                 continue
 
-            # สร้างและฝึกโมเดล Random Forest Regressor
+            # Create and train the Random Forest Regressor model
             model = RandomForestRegressor()
             model.fit(X, y)
             y_pred = model.predict(X)
 
-            # คำนวณค่าประเมินโมเดล
+            # Calculate model evaluation metrics
             rmse = np.sqrt(root_mean_squared_error(y, y_pred))
             r2 = r2_score(y, y_pred)
             fi = model.feature_importances_
 
-            # เก็บผลลัพธ์
+            # Store the results
             feature_result.append(feature_name)
             feature_result.append(r2)
             feature_result.append(rmse)
@@ -227,17 +235,21 @@ class modeling:
 
             DAP_result.append(feature_result)
 
-        # สร้าง DataFrame จากผลลัพธ์
+        # Create a DataFrame from the results
         DAP_columns = ['finance_feature', 'r2', 'rmse'] + [f'fi_{col}' for col in self.disaster_firm_index.columns]
         DAP_df = pd.DataFrame(DAP_result, columns=DAP_columns)
 
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
 
-        # บันทึกผลลัพธ์ลงไฟล์ CSV
+        output_path = os.path.join(output_folder, f'{self.firm_name}_disaster_affect_probabilities.csv')
+
+        # Save the results to a CSV file
         DAP_df.to_csv(output_path, index=False)
         print(f"DAP results saved to {output_path}")
+        
         return DAP_df
+
 
 # 4. Forecasting Disaster Occurences Index
 def forecast_occurrence(model, base_list: np.ndarray, steps: int):

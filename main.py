@@ -4,33 +4,33 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import pandas as pd
 import keras
 
-from keplerfunction import calculate_disaster_index, calculate_firm_finance_features, modeling, DO_forecast, inference_disocc_to_QP, calculate_disaster_location
+import keplerfunction as kf
 
 ## System config
+firm_name = 'hmpro'
 period = (2018, 2023)
 forecast_steps = 10
-output_file_name = 'homepro_disaster_firm_location_forecast'
-output_folder = './output'
 
-# Import dataset
-firm_location_file = r'analysis\dataset\firm_location\location_homepro.csv' # Your firm location
-firm_finance_file = r'analysis\dataset\firm_finance\HMPRO - SET - 2018-2023.csv' # Your firm financial index
-disaster_occurrence_file = r'analysis\dataset\disaster_occurance\disaster_occurence.csv' # Disaster occurrence file
+input_folder = './input'
+output_file_name = f'{firm_name}_disaster_firm_location_forecast'
+output_folder = f'./output/{firm_name}'
 
-firm_location = pd.read_csv(firm_location_file)
-firm_finance = pd.read_csv(firm_finance_file)
+# Input data
+firm_location = kf.read_data(input_folder=input_folder, dir_name='firm_location', firm_name=firm_name) # Your firm location
+firm_finance = kf.read_data(input_folder=input_folder, dir_name='firm_finance', firm_name=firm_name) # Your firm financial index
+
+disaster_occurrence_file = r'input\disaster_occurance\disaster_occurence.csv' # Disaster occurrence file
 disaster_occurrence = pd.read_csv(disaster_occurrence_file)
 
-
 ## 2. Disaster firm index
-disaster_firm_index = calculate_disaster_index(firm_loc=firm_location, dis_occ=disaster_occurrence, period=period)
+disaster_firm_index = kf.calculate_disaster_index(firm_loc=firm_location, dis_occ=disaster_occurrence, period=period)
 
 
 ## 3. Predict Firm's Disaster coefficients(DQC) and Disaster importances(DAP) on Financial Indexes.
-firm_finance_feature = calculate_firm_finance_features(firm_finance, fin_col_range=(1, -3), period=period)
+firm_finance_feature = kf.calculate_firm_finance_features(firm_finance, fin_col_range=(1, -3), period=period)
 
 # Predict firm's DQC and DAP
-firm_finance_model = modeling(firm_finance_feature=firm_finance_feature, disaster_firm_index=disaster_firm_index)
+firm_finance_model = kf.modeling(firm_name=firm_name, firm_finance_feature=firm_finance_feature, disaster_firm_index=disaster_firm_index)
 DQC_df = firm_finance_model.find_DQC() # Disaster Quantity Coefficients (Q)
 DAP_df = firm_finance_model.find_DAP() # Disaster Affection Probability (P)
 
@@ -44,13 +44,13 @@ pm_test = keras.models.load_model(r'forecast_net\do_forecast_models\pm_forecast_
 dis_occ_models = [wd_test, fl_test, pm_test]
 
 # Forecast
-FDO = DO_forecast(firm_loc=firm_location, dis_occ=disaster_occurrence, dis_occ_models=dis_occ_models, period=period, steps=forecast_steps)
+FDO = kf.DO_forecast(firm_loc=firm_location, dis_occ=disaster_occurrence, dis_occ_models=dis_occ_models, period=period, steps=forecast_steps)
 
 
 ## 5. Inference location-based
 
 # location DO -> Forecast -> inference Q and P
-firm_loc_forecast = calculate_disaster_location(firm_loc=firm_location, dis_occ=disaster_occurrence,
+firm_loc_forecast = kf.calculate_disaster_location(firm_loc=firm_location, dis_occ=disaster_occurrence,
                                                 dis_occ_models=dis_occ_models, period=period, predict_step=[3, 5, 10])
 
 
